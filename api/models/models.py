@@ -2,8 +2,10 @@ import uuid
 from pydantic import BaseModel, Field, validator
 from typing import List, Optional
 
+
 class LLMChatRequest(BaseModel):
     prompt: str
+
 
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -12,6 +14,7 @@ class User(BaseModel):
     health_roi: Optional[float] = 0
     financial_roi: Optional[float] = 0
     environmental_roi: Optional[float] = 0
+
 
 class InventoryItemMacros(BaseModel):
     calories: Optional[float] = 0
@@ -31,12 +34,24 @@ class InventoryItemMacros(BaseModel):
     vitamin_c: Optional[float] = 0
     calcium: Optional[float] = 0
     iron: Optional[float] = 0
-    
-    @validator('calories', 'protein', 'carbohydrates', 'fiber', 'sugar', 'fat', 'saturated_fat', 'cholesterol', 'sodium', pre=True)
+
+    @validator(
+        "calories",
+        "protein",
+        "carbohydrates",
+        "fiber",
+        "sugar",
+        "fat",
+        "saturated_fat",
+        "cholesterol",
+        "sodium",
+        pre=True,
+    )
     def non_negative(cls, v):
         if v < 0:
-            raise ValueError('Nutritional values must be non-negative')
+            raise ValueError("Nutritional values must be non-negative")
         return v
+
 
 class InventoryItem(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -49,48 +64,86 @@ class InventoryItem(BaseModel):
     expiration_date: Optional[str] = None
     environmental_impact: Optional[float] = 0
 
+
 class RecipeIngredientInput(BaseModel):
     item_name: str
     quantity: float  # Quantity of the ingredient in grams
+
 
 class RecipeInput(BaseModel):
     name: str
     ingredients: List[RecipeIngredientInput]
     servings: int
-    
+
+
 class RecipeIngredient(BaseModel):
     item: InventoryItem
     quantity: float  # The amount of this ingredient used in the recipe, in grams or other units
+
 
 class Recipe(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
     ingredients: List[RecipeIngredient]
     servings: int
-    
+
     @property
     def total_macros(self) -> InventoryItemMacros:
         """Aggregate macros across all ingredients, based on quantity."""
         total_macros = InventoryItemMacros()
-        
+
         for ingredient in self.ingredients:
             if ingredient.item.macros:
-                total_macros.protein += ingredient.item.macros.protein * (ingredient.quantity / 100)
-                total_macros.carbohydrates += ingredient.item.macros.carbohydrates * (ingredient.quantity / 100)
-                total_macros.fiber += ingredient.item.macros.fiber * (ingredient.quantity / 100)
-                total_macros.sugar += ingredient.item.macros.sugar * (ingredient.quantity / 100)
-                total_macros.fat += ingredient.item.macros.fat * (ingredient.quantity / 100)
-                total_macros.saturated_fat += ingredient.item.macros.saturated_fat * (ingredient.quantity / 100)
-                total_macros.polyunsaturated_fat += ingredient.item.macros.polyunsaturated_fat * (ingredient.quantity / 100)
-                total_macros.monounsaturated_fat += ingredient.item.macros.monounsaturated_fat * (ingredient.quantity / 100)
-                total_macros.trans_fat += ingredient.item.macros.trans_fat * (ingredient.quantity / 100)
-                total_macros.cholesterol += ingredient.item.macros.cholesterol * (ingredient.quantity / 100)
-                total_macros.sodium += ingredient.item.macros.sodium * (ingredient.quantity / 100)
-                total_macros.potassium += ingredient.item.macros.potassium * (ingredient.quantity / 100)
-                total_macros.vitamin_a += ingredient.item.macros.vitamin_a * (ingredient.quantity / 100)
-                total_macros.vitamin_c += ingredient.item.macros.vitamin_c * (ingredient.quantity / 100)
-                total_macros.calcium += ingredient.item.macros.calcium * (ingredient.quantity / 100)
-                total_macros.iron += ingredient.item.macros.iron * (ingredient.quantity / 100)
+                total_macros.protein += ingredient.item.macros.protein * (
+                    ingredient.quantity / 100
+                )
+                total_macros.carbohydrates += ingredient.item.macros.carbohydrates * (
+                    ingredient.quantity / 100
+                )
+                total_macros.fiber += ingredient.item.macros.fiber * (
+                    ingredient.quantity / 100
+                )
+                total_macros.sugar += ingredient.item.macros.sugar * (
+                    ingredient.quantity / 100
+                )
+                total_macros.fat += ingredient.item.macros.fat * (
+                    ingredient.quantity / 100
+                )
+                total_macros.saturated_fat += ingredient.item.macros.saturated_fat * (
+                    ingredient.quantity / 100
+                )
+                total_macros.polyunsaturated_fat += (
+                    ingredient.item.macros.polyunsaturated_fat
+                    * (ingredient.quantity / 100)
+                )
+                total_macros.monounsaturated_fat += (
+                    ingredient.item.macros.monounsaturated_fat
+                    * (ingredient.quantity / 100)
+                )
+                total_macros.trans_fat += ingredient.item.macros.trans_fat * (
+                    ingredient.quantity / 100
+                )
+                total_macros.cholesterol += ingredient.item.macros.cholesterol * (
+                    ingredient.quantity / 100
+                )
+                total_macros.sodium += ingredient.item.macros.sodium * (
+                    ingredient.quantity / 100
+                )
+                total_macros.potassium += ingredient.item.macros.potassium * (
+                    ingredient.quantity / 100
+                )
+                total_macros.vitamin_a += ingredient.item.macros.vitamin_a * (
+                    ingredient.quantity / 100
+                )
+                total_macros.vitamin_c += ingredient.item.macros.vitamin_c * (
+                    ingredient.quantity / 100
+                )
+                total_macros.calcium += ingredient.item.macros.calcium * (
+                    ingredient.quantity / 100
+                )
+                total_macros.iron += ingredient.item.macros.iron * (
+                    ingredient.quantity / 100
+                )
 
         # Scale the macros to per-serving if servings > 1
         if self.servings > 1:
@@ -110,7 +163,7 @@ class Recipe(BaseModel):
                 vitamin_a=total_macros.vitamin_a / self.servings,
                 vitamin_c=total_macros.vitamin_c / self.servings,
                 calcium=total_macros.calcium / self.servings,
-                iron=total_macros.iron / self.servings
+                iron=total_macros.iron / self.servings,
             )
-        
+
         return total_macros

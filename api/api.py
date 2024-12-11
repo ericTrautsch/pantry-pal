@@ -6,7 +6,9 @@ from macros.macro_service import macro_router
 from auth.auth_service import auth_router
 from ai.ai_service import ai_router
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 app = FastAPI()
 
@@ -31,4 +33,5 @@ app.add_api_route("/roi/metrics", get_roi_metrics, methods=["GET"], tags=["ROI"]
 if __name__ == "__main__":
     logging.info("Starting API server")
     import uvicorn
+
     uvicorn.run(app, port=8000)
